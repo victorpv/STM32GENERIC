@@ -245,7 +245,7 @@ uint8_t SPIClass::dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_
 	//HAL_SPI_TransmitReceive(&spiHandle, transmitBuf, receiveBuf, length, 1000);
 	// DMA handles configured in Begin.
 	if (length == 0) return 0;
-	if (!transmitBuf) {
+	if (transmitBuf == NULL) {
 		transmitBuf = &spi_ff_buffer;
 		hdma_spi_tx.Init.MemInc = DMA_MINC_DISABLE;
 	} else {

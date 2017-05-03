@@ -213,16 +213,12 @@
 #ifdef STM32L0
     #define SPI1_StreamTX 1_Channel3
     #define SPI1_StreamRX 1_Channel2
-    #define SPI1_ChannelTX 0
-    #define SPI1_ChannelRX 0
-    #define SPI2_StreamTX 1_Channel5
+    #define SPI1_ChannelTX DMA_REQUEST_1
+    #define SPI1_ChannelRX DMA_REQUEST_1
+	#define SPI2_StreamTX 1_Channel5
     #define SPI2_StreamRX 1_Channel4
-    #define SPI2_ChannelTX 0
-    #define SPI2_ChannelRX 0
-    #define SPI3_StreamTX 2_Channel2
-    #define SPI3_StreamRX 2_Channel1
-    #define SPI3_ChannelTX 0
-    #define SPI3_ChannelRX 0
+    #define SPI1_ChannelTX DMA_REQUEST_2
+    #define SPI1_ChannelRX DMA_REQUEST_2
 
 	#define _DMA_Instance_Type DMA_Channel_TypeDef
 
@@ -263,16 +259,16 @@
 #ifdef STM32L4
     #define SPI1_StreamTX 1_Channel3
     #define SPI1_StreamRX 1_Channel2
-    #define SPI1_ChannelTX 0
-    #define SPI1_ChannelRX 0
+    #define SPI1_ChannelTX DMA_REQUEST_1
+    #define SPI1_ChannelRX DMA_REQUEST_1
     #define SPI2_StreamTX 1_Channel5
     #define SPI2_StreamRX 1_Channel4
-    #define SPI2_ChannelTX 0
-    #define SPI2_ChannelRX 0
+    #define SPI2_ChannelTX DMA_REQUEST_1
+    #define SPI2_ChannelRX DMA_REQUEST_1
     #define SPI3_StreamTX 2_Channel2
     #define SPI3_StreamRX 2_Channel1
-    #define SPI3_ChannelTX 0
-    #define SPI3_ChannelRX 0
+    #define SPI3_ChannelTX DMA_REQUEST_3
+    #define SPI3_ChannelRX DMA_REQUEST_3
 
 	#define _DMA_Instance_Type DMA_Channel_TypeDef
 
@@ -281,7 +277,7 @@
 	 * So we define them to nothing. We should move these to a single block
 	 * for all the series that are compatible.
 	 */
-	#define	_SPISetDMAChannel(hdma_handler,chan)
+	#define	_SPISetDMAChannel(hdma_handler,chan) hdma_handler.Init.Request = chan
 	#define _SPISetDMAFIFO(hdma_handler)
 #endif
 
