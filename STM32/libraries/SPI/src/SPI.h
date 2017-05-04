@@ -217,8 +217,8 @@
     #define SPI1_ChannelRX DMA_REQUEST_1
 	#define SPI2_StreamTX 1_Channel5
     #define SPI2_StreamRX 1_Channel4
-    #define SPI1_ChannelTX DMA_REQUEST_2
-    #define SPI1_ChannelRX DMA_REQUEST_2
+    #define SPI2_ChannelTX DMA_REQUEST_2
+    #define SPI2_ChannelRX DMA_REQUEST_2
 
 	#define _DMA_Instance_Type DMA_Channel_TypeDef
 
