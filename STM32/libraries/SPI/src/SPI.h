@@ -42,12 +42,19 @@
  * Auxiliary macros to derive several names from the same values
  * They derive the name of the DMA Controller+Stream/Channel and the name of the IRQ line
  * corresponding to that name.
- * Need to add another one to derive the name of the ISR for each port.
+ * Also derive the name of ISRs.
  */
 	#define _SPIx_DMA(a) DMA##a
 	#define SPIx_DMA(a) _SPIx_DMA(a)
 	#define _SPIx_DMA_IRQn(a) DMA##a##_IRQn
 	#define SPIx_DMA_IRQn(a) _SPIx_DMA_IRQn(a)
+	#define _SPI_DMA_IRQHandler(a) DMA##a##_IRQHandler
+	#define SPI_DMA_IRQHandler(a) _SPI_DMA_IRQHandler(a)
+
+	#define _SPISetDmaIRQ(a) HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamTX), 0, 0); \
+							HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamRX), 0, 0); \
+							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamTX)); \
+							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamRX));
 
 /*
  * MCU specific values, used by the macros above.
@@ -108,10 +115,6 @@
 								hdma_handler.Init.MemBurst = DMA_MBURST_SINGLE; \
 								hdma_handler.Init.PeriphBurst = DMA_PBURST_SINGLE; } while (0)
 
-	#define _SPISetDmaIRQ(a) HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamTX), 0, 0); \
-							HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamRX), 0, 0); \
-							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamTX)); \
-							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamRX));
 #endif
 #ifdef STM32F3
     #define SPI1_StreamTX 1_Channel3
@@ -331,6 +334,9 @@ class SPIClass {
 	uint8_t dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc = 1);
 
 
+	void _spi_TX_Callback (){ HAL_DMA_IRQHandler(&hdma_spi_tx); }
+	void _spi_RX_Callback (){ HAL_DMA_IRQHandler(&hdma_spi_rx); }
+
   private:
     uint32_t apb_freq = 0;
 
@@ -349,11 +355,24 @@ class SPIClass {
 };
 
 inline uint8_t SPIClass::transfer(uint8_t data) {
+	// For debugging, stop here if RXNE or not TXE
+	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
+		Serial.println("RXNE");
+		while (1);
+	}
+	if(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET) {
+		Serial.println("TXNE");
+		while (1);
+	}
 
+	// For debugging, stop here if RXNE
+	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);
 	*(volatile uint8_t*)&spiHandle.Instance->DR = data;
-
+	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);
+	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_BSY) != RESET);
 	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_RXNE) == RESET);
-	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_BSY) == SET);
+	//while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_RXNE) == RESET);
+	//while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_BSY) == SET);
 
 	return *(volatile uint8_t*)&spiHandle.Instance->DR;
 
@@ -374,6 +393,26 @@ inline uint16_t SPIClass::transfer16(uint16_t data) {
 inline void SPIClass::transfer(uint8_t *buf, size_t count) {
 	HAL_SPI_TransmitReceive(&spiHandle, buf, buf, count, 1000);
 }
+
+#ifdef SPI1
+	static void (*_spi1_this);
+//	void SPI_DMA_IRQHandler(SPI1_StreamTX)(void);
+//	void SPI_DMA_IRQHandler(SPI1_StreamRX)(void);
+#endif
+#ifdef SPI2
+	static void (*_spi2_this);
+//	void SPI_DMA_IRQHandler(SPI2_StreamTX)(void);
+//	void SPI_DMA_IRQHandler(SPI2_StreamRX)(void);
+#endif
+#ifdef SPI3
+	static void (*_spi3_this);
+//	void SPI_DMA_IRQHandler(SPI3_StreamTX)(void);
+//	void SPI_DMA_IRQHandler(SPI3_StreamRX)(void);
+#endif
+#ifdef SPI4
+	static void (*_spi4_this);
+#endif
+
 
 extern SPIClass SPI;
 
