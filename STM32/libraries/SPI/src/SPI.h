@@ -355,17 +355,6 @@ class SPIClass {
 };
 
 inline uint8_t SPIClass::transfer(uint8_t data) {
-	// For debugging, stop here if RXNE or not TXE
-	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
-		Serial.println("RXNE");
-		while (1);
-	}
-	if(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET) {
-		Serial.println("TXNE");
-		while (1);
-	}
-
-	// For debugging, stop here if RXNE
 	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);
 	*(volatile uint8_t*)&spiHandle.Instance->DR = data;
 	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);

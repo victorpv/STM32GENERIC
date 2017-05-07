@@ -40,9 +40,6 @@ void SPIClass::begin() {
 			_ChannelTX = SPI1_ChannelTX;
 			_ChannelRX = SPI1_ChannelRX;
 			_spi1_this = (void*) this;
-			/*
-			 * Not used yet, still just polling
-			 */
 			_SPISetDmaIRQ(SPI1);
 		}
 	#endif
@@ -54,10 +51,7 @@ void SPIClass::begin() {
 			_ChannelTX = SPI2_ChannelTX;
 			_ChannelRX = SPI2_ChannelRX;
 			_spi2_this = (void*) this;
-			/*
-			 * Not used yet, still just polling
-			 */
-			//_SPISetDmaIRQ(SPI2);
+			_SPISetDmaIRQ(SPI2);
 		}
 	#endif
 	#ifdef SPI3
@@ -68,10 +62,7 @@ void SPIClass::begin() {
 			_ChannelTX = SPI3_ChannelTX;
 			_ChannelRX = SPI3_ChannelRX;
 			_spi3_this = (void*) this;
-			/*
-			 * Not used yet, still just polling
-			 */
-			//_SPISetDmaIRQ(SPI3);
+			_SPISetDmaIRQ(SPI3);
 		}
 	#endif
 	#ifdef SPI4
@@ -81,10 +72,7 @@ void SPIClass::begin() {
 			_StreamRX = SPIx_DMA(SPI4_StreamRX);
 			_ChannelTX = SPI4_ChannelTX;
 			_ChannelRX = SPI4_ChannelRX;
-			/*
-			 * Not used yet, still just polling
-			 */
-			//_SPISetDmaIRQ(SPI4);
+			_SPISetDmaIRQ(SPI4);
 		}
 	#endif
 	#ifdef SPI5
@@ -94,10 +82,7 @@ void SPIClass::begin() {
 			_StreamRX = SPIx_DMA(SPI5_StreamRX);
 			_ChannelTX = SPI5_ChannelTX;
 			_ChannelRX = SPI5_ChannelRX;
-			/*
-			 * Not used yet, still just polling
-			 */
-			//_SPISetDmaIRQ(SPI5);
+			_SPISetDmaIRQ(SPI5);
 		}
 	#endif
 	#ifdef SPI6
@@ -107,10 +92,7 @@ void SPIClass::begin() {
 			_StreamRX = SPIx_DMA(SPI6_StreamRX);
 			_ChannelTX = SPI6_ChannelTX;
 			_ChannelRX = SPI6_ChannelRX;
-			/*
-			 * Not used yet, still just polling
-			 */
-			//_SPISetDmaIRQ(SPI6);
+			_SPISetDmaIRQ(SPI6);
 		}
 	#endif
 
@@ -245,19 +227,12 @@ void SPIClass::stm32SetInstance(SPI_TypeDef *instance) {
 	spiHandle.Instance = instance;
 }
 uint8_t SPIClass::dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_t length) {
-	// For debugging, stop here if RXNE
-	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
-		Serial.println("RXNE");
-		while (1);
-	}
-	if(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET) {
-		Serial.println("TXNE");
-		while (1);
-	}
 
 	//HAL_SPI_TransmitReceive(&spiHandle, transmitBuf, receiveBuf, length, 1000);
 	// DMA handles configured in Begin.
 	if (length == 0) return 0;
+	hdma_spi_tx.Instance->CCR &= ~DMA_CCR_EN;
+	hdma_spi_rx.Instance->CCR &= ~DMA_CCR_EN;
 	if (transmitBuf == NULL) {
 		transmitBuf = &spi_ff_buffer;
 		hdma_spi_tx.Init.MemInc = DMA_MINC_DISABLE;
@@ -287,13 +262,12 @@ uint8_t SPIClass::dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_
 	HAL_DMA_IRQHandler(&hdma_spi_tx);
 	HAL_DMA_IRQHandler(&hdma_spi_rx);
 */
-	//while (hdma_spi_rx.State != HAL_DMA_STATE_READY);
 	while (spiHandle.State != HAL_SPI_STATE_READY);
 	return 0;
 }
 uint8_t SPIClass::dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc) {
 	// For debugging, stop here if RXNE
-	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
+/*	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
 		Serial.println("RXNE");
 		while (1);
 	}
@@ -301,6 +275,8 @@ uint8_t SPIClass::dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc) {
 		Serial.println("TXNE");
 		while (1);
 	}
+*/
+	hdma_spi_tx.Instance->CCR &= ~DMA_CCR_EN;
 	if (minc == 1){
 		hdma_spi_tx.Init.MemInc = DMA_MINC_ENABLE;
 	} else {
@@ -315,7 +291,6 @@ uint8_t SPIClass::dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc) {
 /*	HAL_DMA_PollForTransfer(&hdma_spi_tx, HAL_DMA_FULL_TRANSFER, 10000);
 	HAL_DMA_IRQHandler(&hdma_spi_tx);
 */
-	//while (hdma_spi_tx.State != HAL_DMA_STATE_READY);
 	while (spiHandle.State != HAL_SPI_STATE_READY);
 //	__IO uint16_t tmpreg = 0;
 //	tmpreg = spiHandle.Instance->DR;
