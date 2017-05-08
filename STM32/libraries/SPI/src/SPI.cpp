@@ -231,8 +231,26 @@ uint8_t SPIClass::dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_
 	//HAL_SPI_TransmitReceive(&spiHandle, transmitBuf, receiveBuf, length, 1000);
 	// DMA handles configured in Begin.
 	if (length == 0) return 0;
+
+
+#ifdef STM32F1
+	/*
+	 * We need to disable the DMA channel in F1 because HAL_DMA_Init doesn't disable it
+	 * unlike the other series.
+	 */
 	hdma_spi_tx.Instance->CCR &= ~DMA_CCR_EN;
 	hdma_spi_rx.Instance->CCR &= ~DMA_CCR_EN;
+
+	/*
+	 * F1 HALMX core has a bug in file stm32f1xx_hal_spi.c missing these two lines
+	 * in HAL_SPI_TransmitReceive_DMA
+	 * They need to be reset since the RX callback handles the transfer complete
+	 * These two lines are present in every other series.
+	 */
+	spiHandle.hdmatx->XferHalfCpltCallback = NULL;
+	spiHandle.hdmatx->XferCpltCallback     = NULL;
+#endif
+
 	if (transmitBuf == NULL) {
 		transmitBuf = &spi_ff_buffer;
 		hdma_spi_tx.Init.MemInc = DMA_MINC_DISABLE;
@@ -240,15 +258,6 @@ uint8_t SPIClass::dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_
 		//Need to change the MINC mode since dmaSend with MINC 0 or Null transmitBuf may have been called last
 		hdma_spi_tx.Init.MemInc = DMA_MINC_ENABLE;
 	}
-
-	/*
-	 * F1 HALMX core has a bug in file stm32f1xx_hal_spi.c missing these two lines
-	 * They need to be reset since the RX callback handles the transfer complete
-	 * These two lines are present in every other series.
-	 */
-
-	spiHandle.hdmatx->XferHalfCpltCallback = NULL;
-	spiHandle.hdmatx->XferCpltCallback     = NULL;
 
 	HAL_DMA_Init(&hdma_spi_tx);
 	HAL_DMA_Init(&hdma_spi_rx);
@@ -276,7 +285,14 @@ uint8_t SPIClass::dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc) {
 		while (1);
 	}
 */
+	/*
+	 * We need to disable the DMA channel in F1 because the HAL doesn't disable it in
+	 * HAL_DMA_Init unlike all the other series.
+	 */
+#ifdef STM32F1
 	hdma_spi_tx.Instance->CCR &= ~DMA_CCR_EN;
+#endif
+
 	if (minc == 1){
 		hdma_spi_tx.Init.MemInc = DMA_MINC_ENABLE;
 	} else {
