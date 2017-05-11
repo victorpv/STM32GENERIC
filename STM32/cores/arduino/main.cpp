@@ -18,6 +18,7 @@
 */
 
 #include <Arduino.h>
+#include "USBDevice.h"
 
 // Declared weak in Arduino.h to allow user redefinitions.
 int atexit(void (* /*func*/ )()) { return 0; }
@@ -37,13 +38,16 @@ int main(void)
     HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
     #endif
 
+    #ifdef STM32F7
+    SCB_EnableICache();
+    SCB_EnableDCache();
+    #endif
+
 	init();
 
 	initVariant();
 
-#if defined(USBCON)
-	USBDevice.attach();
-#endif
+	USBDeviceFS.beginMenuSelection();
 	
 	setup();
     
