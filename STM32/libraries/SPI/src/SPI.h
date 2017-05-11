@@ -304,6 +304,30 @@ class SPIClass {
     SPIClass(SPI_TypeDef *instance) {
     	spiHandle.Instance = instance;
     };
+    SPIClass(uint8_t port_idx) {
+    	SPI_TypeDef  *spi_list[] = {
+#ifdef SPI1
+    			SPI1,
+#endif
+#ifdef SPI2
+				SPI2,
+#endif
+#ifdef SPI3
+				SPI3,
+#endif
+#ifdef SPI4
+				SPI4,
+#endif
+#ifdef SPI5
+				SPI5,
+#endif
+#ifdef SPI6
+				SPI6,
+#endif
+    	};
+    	SPI_TypeDef *instance = spi_list[port_idx -1];
+    	spiHandle.Instance = instance;
+    };
     SPIClass(SPI_TypeDef *instance, uint8_t mosi, uint8_t miso, uint8_t sck) {
 		spiHandle.Instance = instance;
 
@@ -357,8 +381,8 @@ class SPIClass {
 inline uint8_t SPIClass::transfer(uint8_t data) {
 	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);
 	*(volatile uint8_t*)&spiHandle.Instance->DR = data;
-	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);
-	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_BSY) != RESET);
+	//while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET);
+	//while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_BSY) != RESET);
 	while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_RXNE) == RESET);
 	//while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_RXNE) == RESET);
 	//while(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_BSY) == SET);
@@ -385,21 +409,21 @@ inline void SPIClass::transfer(uint8_t *buf, size_t count) {
 
 #ifdef SPI1
 	static void (*_spi1_this);
-//	void SPI_DMA_IRQHandler(SPI1_StreamTX)(void);
-//	void SPI_DMA_IRQHandler(SPI1_StreamRX)(void);
 #endif
 #ifdef SPI2
 	static void (*_spi2_this);
-//	void SPI_DMA_IRQHandler(SPI2_StreamTX)(void);
-//	void SPI_DMA_IRQHandler(SPI2_StreamRX)(void);
 #endif
 #ifdef SPI3
 	static void (*_spi3_this);
-//	void SPI_DMA_IRQHandler(SPI3_StreamTX)(void);
-//	void SPI_DMA_IRQHandler(SPI3_StreamRX)(void);
 #endif
 #ifdef SPI4
 	static void (*_spi4_this);
+#endif
+#ifdef SPI5
+	static void (*_spi5_this);
+#endif
+#ifdef SPI6
+	static void (*_spi6_this);
 #endif
 
 

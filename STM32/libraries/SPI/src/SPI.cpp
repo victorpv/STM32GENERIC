@@ -308,8 +308,10 @@ uint8_t SPIClass::dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc) {
 	HAL_DMA_IRQHandler(&hdma_spi_tx);
 */
 	while (spiHandle.State != HAL_SPI_STATE_READY);
-//	__IO uint16_t tmpreg = 0;
-//	tmpreg = spiHandle.Instance->DR;
+	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
+	__IO uint16_t tmpreg = 0;
+	tmpreg = spiHandle.Instance->DR;
+	}
 	return 0;
 }
 
