@@ -228,7 +228,6 @@ void SPIClass::stm32SetInstance(SPI_TypeDef *instance) {
 }
 uint8_t SPIClass::dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_t length) {
 
-	//HAL_SPI_TransmitReceive(&spiHandle, transmitBuf, receiveBuf, length, 1000);
 	// DMA handles configured in Begin.
 	if (length == 0) return 0;
 
@@ -266,25 +265,10 @@ uint8_t SPIClass::dmaTransfer(uint8_t *transmitBuf, uint8_t *receiveBuf, uint16_
 	if (HAL_SPI_TransmitReceive_DMA(&spiHandle, transmitBuf, receiveBuf, length) != HAL_OK){
 		while (1);
 	}
-/*	HAL_DMA_PollForTransfer(&hdma_spi_tx, HAL_DMA_FULL_TRANSFER, 1000);
-	HAL_DMA_PollForTransfer(&hdma_spi_rx, HAL_DMA_FULL_TRANSFER, 1000);
-	HAL_DMA_IRQHandler(&hdma_spi_tx);
-	HAL_DMA_IRQHandler(&hdma_spi_rx);
-*/
 	while (spiHandle.State != HAL_SPI_STATE_READY);
 	return 0;
 }
 uint8_t SPIClass::dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc) {
-	// For debugging, stop here if RXNE
-/*	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
-		Serial.println("RXNE");
-		while (1);
-	}
-	if(__HAL_SPI_GET_FLAG(&spiHandle, SPI_FLAG_TXE) == RESET) {
-		Serial.println("TXNE");
-		while (1);
-	}
-*/
 	/*
 	 * We need to disable the DMA channel in F1 because the HAL doesn't disable it in
 	 * HAL_DMA_Init unlike all the other series.
@@ -304,9 +288,7 @@ uint8_t SPIClass::dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc) {
 	if (HAL_SPI_Transmit_DMA(&spiHandle, transmitBuf, length) !=HAL_OK){
 		while (1);
 	}
-/*	HAL_DMA_PollForTransfer(&hdma_spi_tx, HAL_DMA_FULL_TRANSFER, 10000);
-	HAL_DMA_IRQHandler(&hdma_spi_tx);
-*/
+
 	while (spiHandle.State != HAL_SPI_STATE_READY);
 	if((spiHandle.Instance->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE) {
 	__IO uint16_t tmpreg = 0;
@@ -322,50 +304,50 @@ extern "C" {
 
 #ifdef SPI1
 	void SPI_DMA_IRQHandler(SPI1_StreamTX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi1_this)->_spi_TX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi1_this)->_spiDMATxCallback();
 	}
 	void SPI_DMA_IRQHandler(SPI1_StreamRX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi1_this)->_spi_RX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi1_this)->_spiDMARxCallback();
 	}
 #endif
 #ifdef SPI2
 	void SPI_DMA_IRQHandler(SPI2_StreamTX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi2_this)->_spi_TX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi2_this)->_spiDMATxCallback();
 	}
 	void SPI_DMA_IRQHandler(SPI2_StreamRX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi2_this)->_spi_RX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi2_this)->_spiDMARxCallback();
 	}
 #endif
 #ifdef SPI3
 	void SPI_DMA_IRQHandler(SPI3_StreamTX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi3_this)->_spi_TX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi3_this)->_spiDMATxCallback();
 	}
 	void SPI_DMA_IRQHandler(SPI3_StreamRX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi3_this)->_spi_RX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi3_this)->_spiDMARxCallback();
 	}
 #endif
 #ifdef SPI4
 	void SPI_DMA_IRQHandler(SPI4_StreamTX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi4_this)->_spi_TX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi4_this)->_spiDMATxCallback();
 	}
 	void SPI_DMA_IRQHandler(SPI4_StreamRX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi4_this)->_spi_RX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi4_this)->_spiDMARxCallback();
 	}
 #endif
 #ifdef SPI5
 	void SPI_DMA_IRQHandler(SPI5_StreamTX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi5_this)->_spi_TX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi5_this)->_spiDMATxCallback();
 	}
 	void SPI_DMA_IRQHandler(SPI5_StreamRX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi5_this)->_spi_RX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi5_this)->_spiDMARxCallback();
 	}
 #endif
 #ifdef SPI6
 	void SPI_DMA_IRQHandler(SPI6_StreamTX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi6_this)->_spi_TX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi6_this)->_spiDMATxCallback();
 	}
 	void SPI_DMA_IRQHandler(SPI6_StreamRX)(void) {
-	    reinterpret_cast<class SPIClass*>(_spi6_this)->_spi_RX_Callback();
+	    reinterpret_cast<class SPIClass*>(_spi6_this)->_spiDMARxCallback();
 	}
 #endif
 }

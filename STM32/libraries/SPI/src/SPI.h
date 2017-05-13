@@ -109,8 +109,7 @@
 	#define _DMA_Instance_Type DMA_Stream_TypeDef
 	#define	_SPISetDMAChannel(hdma_handler,chan) hdma_handler.Init.Channel = chan
 
-	#define _SPISetDMAFIFO(hdma_handler)	do { hdma_handler.Init.FIFOMode = DMA_FIFOMODE_DISABLE; \
-								hdma_handler.Init.FIFOMode = DMA_FIFOMODE_ENABLE; \
+	#define _SPISetDMAFIFO(hdma_handler)	do { hdma_handler.Init.FIFOMode = DMA_FIFOMODE_ENABLE; \
 								hdma_handler.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL; \
 								hdma_handler.Init.MemBurst = DMA_MBURST_SINGLE; \
 								hdma_handler.Init.PeriphBurst = DMA_PBURST_SINGLE; } while (0)
@@ -168,16 +167,11 @@
 	 */
 	#define	_SPISetDMAChannel(hdma_handler,chan) hdma_handler.Init.Channel = chan
 
-	#define _SPISetDMAFIFO(hdma_handler)	do { hdma_handler.Init.FIFOMode = DMA_FIFOMODE_DISABLE; \
-								hdma_handler.Init.FIFOMode = DMA_FIFOMODE_ENABLE; \
+	#define _SPISetDMAFIFO(hdma_handler)	do { hdma_handler.Init.FIFOMode = DMA_FIFOMODE_ENABLE; \
 								hdma_handler.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL; \
 								hdma_handler.Init.MemBurst = DMA_MBURST_SINGLE; \
 								hdma_handler.Init.PeriphBurst = DMA_PBURST_SINGLE; } while (0)
 
-	#define _SPISetDmaIRQ(a) HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamTX), 0, 0); \
-							HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamRX), 0, 0); \
-							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamTX)); \
-							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamRX));
 #endif
 #ifdef STM32F7
     #define SPI1_StreamTX 2_Stream3
@@ -202,16 +196,11 @@
 	 */
 	#define	_SPISetDMAChannel(hdma_handler,chan) hdma_handler.Init.Channel = chan
 
-	#define _SPISetDMAFIFO(hdma_handler)	do { hdma_handler.Init.FIFOMode = DMA_FIFOMODE_DISABLE; \
-								hdma_handler.Init.FIFOMode = DMA_FIFOMODE_ENABLE; \
+	#define _SPISetDMAFIFO(hdma_handler)	do { hdma_handler.Init.FIFOMode = DMA_FIFOMODE_ENABLE; \
 								hdma_handler.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL; \
 								hdma_handler.Init.MemBurst = DMA_MBURST_SINGLE; \
 								hdma_handler.Init.PeriphBurst = DMA_PBURST_SINGLE; } while (0)
 
-	#define _SPISetDmaIRQ(a) HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamTX), 0, 0); \
-							HAL_NVIC_SetPriority(SPIx_DMA_IRQn(a##_StreamRX), 0, 0); \
-							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamTX)); \
-							HAL_NVIC_EnableIRQ(SPIx_DMA_IRQn(a##_StreamRX));
 #endif
 #ifdef STM32L0
     #define SPI1_StreamTX 1_Channel3
@@ -358,8 +347,8 @@ class SPIClass {
 	uint8_t dmaSend(uint8_t *transmitBuf, uint16_t length, bool minc = 1);
 
 
-	void _spi_TX_Callback (){ HAL_DMA_IRQHandler(&hdma_spi_tx); }
-	void _spi_RX_Callback (){ HAL_DMA_IRQHandler(&hdma_spi_rx); }
+	void _spiDMATxCallback (){ HAL_DMA_IRQHandler(&hdma_spi_tx); }
+	void _spiDMARxCallback (){ HAL_DMA_IRQHandler(&hdma_spi_rx); }
 
   private:
     uint32_t apb_freq = 0;
