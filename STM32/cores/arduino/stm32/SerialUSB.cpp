@@ -109,6 +109,7 @@ size_t SerialUSBClass::readBytes(char *buf, const size_t& len)
     uint16_t _iHead;
 
     size_t rxed = 0;
+    unsigned long timeoutMillis = millis() + _timeout;
     do {
         _iHead = rx_buffer.iHead;
         rx_unread = (_iHead - rx_buffer.iTail + CDC_SERIAL_BUFFER_SIZE) % CDC_SERIAL_BUFFER_SIZE;
@@ -122,6 +123,7 @@ size_t SerialUSBClass::readBytes(char *buf, const size_t& len)
         {
             USBD_CDC_ReceivePacket(&hUsbDeviceFS);
         }
+    } while((millis() < timeoutMillis) || (rxed < len));
     // If there is space for 1 more packet, ACK last packet to enable RX endpoint.
 
     return rxed;
