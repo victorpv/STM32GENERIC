@@ -81,14 +81,50 @@ int SerialUSBClass::peek(void)
 
 int SerialUSBClass::read(void)
 {
+    uint32_t rx_unread;
   // if the head isn't ahead of the tail, we don't have any characters
-  if ( rx_buffer.iHead == rx_buffer.iTail )
+  if ( (rx_buffer.iHead == rx_buffer.iTail) || (hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) )
     return -1;
 
   uint8_t uc = rx_buffer.buffer[rx_buffer.iTail];
-  rx_buffer.iTail = (unsigned int)(rx_buffer.iTail + 1) % CDC_SERIAL_BUFFER_SIZE;
+  rx_buffer.iTail = (rx_buffer.iTail + 1) % CDC_SERIAL_BUFFER_SIZE;
+
+  rx_unread = (rx_buffer.iHead - rx_buffer.iTail + CDC_SERIAL_BUFFER_SIZE) % CDC_SERIAL_BUFFER_SIZE;
+
+  // If there is space for 1 more packet, ACK last packet to enable RX endpoint.
+  if (rx_unread < CDC_SERIAL_BUFFER_SIZE - CDC_DATA_FS_MAX_PACKET_SIZE)
+  {
+      USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  }
 
   return uc;
+}
+
+size_t SerialUSBClass::readBytes(char *buf, const size_t& len)
+{
+    if ( (len <= 0) || (hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) )
+      return 0;
+
+    uint16_t rx_unread;
+    uint16_t _iHead;
+
+    size_t rxed = 0;
+    do {
+        _iHead = rx_buffer.iHead;
+        rx_unread = (_iHead - rx_buffer.iTail + CDC_SERIAL_BUFFER_SIZE) % CDC_SERIAL_BUFFER_SIZE;
+        if (rx_unread > (len - rxed)) rx_unread = (len - rxed);
+        for (uint16_t i = 0; i < rx_unread; i++) {
+            buf[rxed + i] = rx_buffer.buffer[rx_buffer.iTail];
+            rx_buffer.iTail = (rx_buffer.iTail + 1) % CDC_SERIAL_BUFFER_SIZE;
+        }
+        rxed += rx_unread;
+        if (rx_unread < CDC_SERIAL_BUFFER_SIZE - CDC_DATA_FS_MAX_PACKET_SIZE)
+        {
+            USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+        }
+    // If there is space for 1 more packet, ACK last packet to enable RX endpoint.
+
+    return rxed;
 }
 
 void SerialUSBClass::flush(void){
@@ -147,15 +183,23 @@ void SerialUSBClass::CDC_TxHandler() {
   }
 }
 
-void SerialUSBClass::CDC_RxHandler (uint8_t* Buf, uint16_t Len){
+int SerialUSBClass::CDC_RxHandler (uint8_t* Buf, uint16_t Len){
 
-  for(uint16_t i=0;i<Len;i++){
-    if(available() < (CDC_SERIAL_BUFFER_SIZE - 1)){
-      rx_buffer.buffer[rx_buffer.iHead] = *Buf++;
-      rx_buffer.iHead = (uint16_t)(rx_buffer.iHead + 1) % CDC_SERIAL_BUFFER_SIZE;
-    }else
-      break;
-  }
+    uint32_t rx_unread;
+    while(Len-- > 0) {
+        rx_buffer.buffer[rx_buffer.iHead] = *Buf++;
+        rx_buffer.iHead = (rx_buffer.iHead + 1) % CDC_SERIAL_BUFFER_SIZE;
+    }
+
+    rx_unread = (rx_buffer.iHead - rx_buffer.iTail + CDC_SERIAL_BUFFER_SIZE) % CDC_SERIAL_BUFFER_SIZE;
+
+    if (rx_unread < CDC_SERIAL_BUFFER_SIZE - CDC_DATA_FS_MAX_PACKET_SIZE)
+    {
+        return true;
+    }
+
+    else return false;
+
 }
 
 
@@ -219,8 +263,8 @@ extern "C" void USBSerial_Tx_Handler(){
   SerialUSB.CDC_TxHandler();
 }
 
-extern "C" void USBSerial_Rx_Handler(uint8_t *data, uint16_t len){
-  SerialUSB.CDC_RxHandler(data, len);
+extern "C" int USBSerial_Rx_Handler(uint8_t *data, uint16_t len){
+  return SerialUSB.CDC_RxHandler(data, len);
 }
 
 SerialUSBClass SerialUSB;

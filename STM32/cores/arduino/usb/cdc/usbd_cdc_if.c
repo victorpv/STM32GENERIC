@@ -264,16 +264,19 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
 		 * If yes, check if the DTR has been set, to put the MCU into the bootloader mode.
 		 */
 		if(dtr_pin > 3){
-      if((Buf[0] == '1')&&(Buf[1] == 'E')&&(Buf[2] == 'A')&&(Buf[3] == 'F')){
-        HAL_NVIC_SystemReset();
-      }
-      dtr_pin = 0;
+		    if((Buf[0] == '1')&&(Buf[1] == 'E')&&(Buf[2] == 'A')&&(Buf[3] == 'F')){
+		        HAL_NVIC_SystemReset();
+		    }
+		    dtr_pin = 0;
 		}
-  }
+	}
 
 	uint16_t len = *Len;
-    USBSerial_Rx_Handler((uint8_t *)&Buf[0], len);
-    USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+	// This will return true if there is space for at least 1 more packet, and false otherwise
+    if (USBSerial_Rx_Handler((uint8_t *)&Buf[0], len)) {
+        USBD_CDC_ReceivePacket(&hUsbDeviceFS); //ACK and prepare to receive new packet
+    }
+
 
   //USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   //USBD_CDC_ReceivePacket(&hUsbDeviceFS);

@@ -34,7 +34,11 @@
 #ifndef __USBD_CDC_IF_H
 #define __USBD_CDC_IF_H
 
-#define CDC_SERIAL_BUFFER_SIZE  128 //USBSerial buffer data length 
+#define CDC_SERIAL_BUFFER_SIZE  513 //USBSerial buffer data length
+/*
+ * Todo: tx and rx buffer's size should be independent
+ */
+//#define CDC_DATA_MAX_PACKET_SIZE 64 // Max packet size for USB FS Bulk endpoint per USB specifications
 
 #ifdef __cplusplus
  extern "C" {
@@ -102,7 +106,7 @@ extern USBD_CDC_ItfTypeDef  USBD_Interface_fops_FS;
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-extern void USBSerial_Rx_Handler(uint8_t *data, uint16_t len);
+extern int USBSerial_Rx_Handler(uint8_t *data, uint16_t len);
 /* USER CODE END EXPORTED_FUNCTIONS */
 /**
   * @}

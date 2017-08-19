@@ -53,12 +53,13 @@ class SerialUSBClass : public Stream{
     //virtual void accept(void);
     virtual int peek(void);
     virtual int read(void);
+    virtual size_t readBytes(char *buf, const size_t& len);
     virtual void flush(void);
     virtual size_t write(uint8_t c);
     virtual size_t write(const uint8_t *buffer, size_t size);
     using Print::write; // pull in write(str) from Print
     operator bool();
-    void CDC_RxHandler(uint8_t* Buf, uint16_t Len);
+    int CDC_RxHandler(uint8_t* Buf, uint16_t Len);
     void CDC_TxHandler(void);
 	// These return the settings specified by the USB host for the
 	// serial port. These aren't really used, but are offered here
