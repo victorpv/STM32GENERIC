@@ -34,7 +34,7 @@
 #ifndef __USBD_CDC_IF_H
 #define __USBD_CDC_IF_H
 
-#define CDC_SERIAL_BUFFER_SIZE  513 //USBSerial buffer data length
+#define CDC_SERIAL_BUFFER_SIZE  256 //USBSerial buffer data length
 /*
  * Todo: tx and rx buffer's size should be independent
  */
